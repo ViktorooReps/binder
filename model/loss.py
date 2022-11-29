@@ -15,6 +15,8 @@ def masked_logsumexp_w_elem(tensor: Tensor, mask: BoolTensor):
     maxes = torch.amax(masked_tensor, [-1, -2], keepdim=True)
     masked_exp_tensor = torch.exp(masked_tensor - maxes)
     exp_tensor = torch.exp(tensor - maxes)  # might cause overflow
+    print(f'met: {torch.isnan(masked_exp_tensor).sum()}/{torch.numel(masked_exp_tensor)}')
+    print(f'et: {torch.isnan(exp_tensor).sum()}/{torch.numel(exp_tensor)}')
     sum_w_elem = torch.sum(masked_exp_tensor, [-1, -2], keepdim=True) + exp_tensor
     return sum_w_elem.log().add(maxes)
 
