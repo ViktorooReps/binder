@@ -3,8 +3,8 @@ from torch import Tensor, LongTensor, logsumexp
 from torch.nn import Module
 
 REDUCTION = {
-    'mean': torch.mean,
-    'sum': torch.sum,
+    'mean': torch.nanmean,
+    'sum': torch.nansum,
     'none': lambda x, dim: x
 }
 
@@ -41,8 +41,8 @@ class ContrastiveThresholdLoss(Module):
         cls_score = denominator_score - predicted_scores[:, :, 0, 0]
 
         # mean over positives
-        negative_scores_mask = (ignore_mask | ~class_mask)
-        predicted_scores[negative_scores_mask] = torch.nan
+        positive_scores_mask = (~ignore_mask & class_mask)
+        predicted_scores[~positive_scores_mask] = torch.nan
         predicted_scores = predicted_scores.nanmean(dim=[-2, -1])
 
         # use [CLS] label as a threshold
