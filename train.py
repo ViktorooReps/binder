@@ -39,7 +39,7 @@ def compute_metrics(
     sum_f1 = 0
     sum_recall = 0
     sum_precision = 0
-    for category_id, (f1, recall, precision) in enumerate(zip(f1_category_scores, recall_category_scores, precision_category_scores)):
+    for category_id, f1, recall, precision in zip(labels, f1_category_scores, recall_category_scores, precision_category_scores):
         if category_id == no_entity_category_id:
             logger.info(f'O: {f1}, {recall}, {precision}')
             continue
