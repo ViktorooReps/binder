@@ -42,7 +42,7 @@ class SpanClassifier(SerializableModel):
             hidden_size: int = 128,
             max_sequence_length: int = 128,
             max_entity_length: int = 30,
-            loss_beta: float = 0.6,
+            loss_beta: float = 0.9,
             start_coef: float = 0.2,
             end_coef: float = 0.2,
             span_coef: float = 0.6
