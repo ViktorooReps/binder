@@ -82,11 +82,10 @@ class InferenceBinder(SerializableModel):
             stride=stride
         ))
 
-        repeats = 1 / stride
-
         no_entity_category_id = self._category_mapping[self._no_entity_category]
 
         predictions_collector = [defaultdict(int) for _ in texts]
+        total_predictions = [0 for _ in texts]
         for batch in batch_examples(
                 examples,
                 batch_size=1,
@@ -117,11 +116,12 @@ class InferenceBinder(SerializableModel):
             chosen_span_ends = span_end[entities_mask]
             for text_id, category_id, start, end in zip(chosen_text_ids, chosen_category_ids, chosen_span_starts, chosen_span_ends):
                 predictions_collector[text_id][TypedSpan(start.item(), end.item(), self._category_id_mapping[category_id.item()])] += 1
+                total_predictions[text_id] += 1
 
         all_entities = [set() for _ in texts]
         for text_id, preds in enumerate(predictions_collector):
             for entity, count_preds in preds.items():
-                if count_preds > repeats / 2:
+                if count_preds > total_predictions[text_id] / 2:
                     all_entities[text_id].add(entity)
 
         return all_entities
