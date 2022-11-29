@@ -20,7 +20,11 @@ def masked_logsumexp_w_elem(tensor: Tensor, mask: BoolTensor):
     print(f'met: {torch.isnan(masked_exp_tensor).sum()}/{torch.numel(masked_exp_tensor)}')
     print(f'et: {torch.isnan(exp_tensor).sum()}/{torch.numel(exp_tensor)}')
     sum_w_elem = torch.sum(masked_exp_tensor, [-1, -2], keepdim=True) + exp_tensor
-    return sum_w_elem.log().add(maxes)
+    swe = sum_w_elem.log().add(maxes)
+    print(f'swe nan: {torch.isnan(swe).sum()}/{torch.numel(swe)}')
+    print(f'swe > 1000: {(swe > 1000).sum()}/{torch.numel(swe)}')
+    print(f'swe < -1000: {(swe < -1000).sum()}/{torch.numel(swe)}')
+    return swe
 
 
 class ContrastiveThresholdLoss(Module):
