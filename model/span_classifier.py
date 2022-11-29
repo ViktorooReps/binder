@@ -103,7 +103,7 @@ class SpanClassifier(SerializableModel):
             return
 
         with torch.no_grad():
-            self._frozen_entity_representations = self._entity_projection(self._descriptions_encoder(**self._encoded_descriptions))
+            self._frozen_entity_representations = self._descriptions_encoder(self._encoded_descriptions)
 
     def add_descriptions(self, descriptions: List[str]) -> None:
         self._encoded_descriptions = self._descriptions_encoder.prepare_inputs(descriptions)
