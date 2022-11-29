@@ -128,7 +128,7 @@ class SpanClassifier(SerializableModel):
     def _get_length_representations(self, token_representations: Tensor) -> Tensor:
         batch_size, sequence_length, representation_dims = token_representations.shape
 
-        length_embeddings = self._length_embedding(torch.arange(self._max_entity_length))
+        length_embeddings = self._length_embedding(torch.arange(self._max_entity_length, device=self.device))
         return length_embeddings.reshape(1, 1, self._max_entity_length, self._hidden_size).repeat(batch_size, sequence_length, 1, 1)
 
     def _get_span_representations(self, token_representations: Tensor) -> Tuple[Tensor, BoolTensor]:
