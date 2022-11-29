@@ -12,10 +12,10 @@ REDUCTION = {
 def masked_logsumexp_w_elem(tensor: Tensor, mask: BoolTensor):
     masked_tensor = torch.clone(tensor)
     masked_tensor[~mask] = -torch.inf
-    maxes = torch.amax(masked_tensor, [-1, -2], keepdim=True)
+    maxes = torch.maximum(torch.amax(masked_tensor, [-1, -2], keepdim=True), tensor)
     maxes = torch.masked_fill(maxes, maxes.abs() == float("inf"), 0)
     masked_exp_tensor = torch.exp(masked_tensor - maxes)
-    exp_tensor = torch.exp(tensor - maxes)  # might cause overflow
+    exp_tensor = torch.exp(tensor - maxes)
     print(f't: {torch.isnan(tensor).sum()}/{torch.numel(tensor)}')
     print(f'met: {torch.isnan(masked_exp_tensor).sum()}/{torch.numel(masked_exp_tensor)}')
     print(f'et: {torch.isnan(exp_tensor).sum()}/{torch.numel(exp_tensor)}')
