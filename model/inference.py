@@ -8,10 +8,13 @@ from pathlib import Path
 from typing import Dict, List, Set, TypeVar, Optional
 
 import torch
+from onnxruntime.transformers import optimizer
+from onnxruntime.transformers.fusion_options import FusionOptions
 from torch import Tensor, LongTensor
 from torch.nn import Module
 from torch.nn.functional import pad
 from torch.onnx import export
+from tqdm import tqdm
 from transformers import TensorType
 from transformers.convert_graph_to_onnx import quantize
 from transformers.onnx import FeaturesManager, OnnxConfig
@@ -74,7 +77,7 @@ class InferenceBinder(SerializableModel):
 
     @torch.no_grad()
     def forward(self, texts: List[str]) -> List[Set[TypedSpan]]:
-        stride = 1/8
+        stride = 1/4
         examples = list(self._classifier.prepare_inputs(
             texts, [None] * len(texts),
             category_mapping=self._category_mapping,
@@ -86,27 +89,40 @@ class InferenceBinder(SerializableModel):
 
         predictions_collector = [defaultdict(int) for _ in texts]
         total_predictions = [0 for _ in texts]
-        for batch in batch_examples(
+        for batch in tqdm(batch_examples(
                 examples,
                 batch_size=1,
                 collate_fn=partial(self._classifier.collate_examples, return_batch_examples=True)
-        ):
+        ), total=len(examples)):
             predictions: LongTensor = self._classifier(**batch)
-            entities_mask = ((predictions != no_entity_category_id) & (predictions != -100))
 
             batched_examples: BatchedExamples = batch['examples']
 
-            batch_size, length = predictions.shape
+            batch_size, length = batched_examples.start_offset.shape
             span_start = pad(
                 batched_examples.start_offset,
                 [0, self._max_sequence_length - length],
                 value=-100
             ).view(batch_size, self._max_sequence_length, 1).repeat(1, 1, self._max_entity_length)
 
+            end_offset = pad(
+                batched_examples.end_offset,
+                [0, self._max_sequence_length - length],
+                value=-100
+            )
+
+            padding_masks = []
             span_end = []
             for shift in range(self._max_entity_length):  # self._max_entity_length ~ 20-30, so it is fine to not vectorize this
-                span_end.append(torch.roll(batched_examples.end_offset, -shift, 1).unsqueeze(-2))
+                span_end.append(torch.roll(end_offset, -shift, 1).unsqueeze(-1))
+                padding_mask = torch.roll(end_offset != -100, -shift, 1)
+                padding_mask[:, -shift:] = False
+                padding_masks.append(padding_mask.unsqueeze(-1))
+
             span_end = torch.concat(span_end, dim=-1)
+            padding_mask = torch.concat(padding_masks, dim=-1)
+
+            entities_mask = ((predictions != no_entity_category_id) & padding_mask)
 
             entity_text_ids = torch.tensor(batched_examples.text_ids).view(batch_size, 1, 1).repeat(1, self._max_sequence_length, self._max_entity_length)
 
@@ -130,20 +146,22 @@ class InferenceBinder(SerializableModel):
             self,
             onnx_dir: Path,
             quant: bool = True,
+            fuse: bool = True,
             opset_version: int = 13,
             do_constant_folding: bool = True
     ) -> None:
         onnx_model_path = onnx_dir.joinpath('model.onnx')
+        onnx_optimized_model_path = onnx_dir.joinpath('model-optimized.onnx')
 
         # load config
-        model_kind, model_onnx_config = FeaturesManager.check_supported_model_or_raise(self._encoder)
+        model_kind, model_onnx_config = FeaturesManager.check_supported_model_or_raise(self._classifier._token_encoder)
         onnx_config: OnnxConfig = model_onnx_config(self._classifier._token_encoder.config)
 
         model_inputs = onnx_config.generate_dummy_inputs(self._classifier._tokenizer, framework=TensorType.PYTORCH)
         dynamic_axes = {0: 'batch', 1: 'sequence'}
         # export to onnx
         export(
-            self._encoder,
+            self._classifier._token_encoder,
             ({'input_ids': model_inputs['input_ids']},),
             f=onnx_model_path.as_posix(),
             verbose=False,
@@ -153,6 +171,20 @@ class InferenceBinder(SerializableModel):
             do_constant_folding=do_constant_folding,
             opset_version=opset_version,
         )
+
+        if fuse:
+            opt_options = FusionOptions('bert')
+            opt_options.enable_embed_layer_norm = False
+
+            optimizer.optimize_model(
+                str(onnx_model_path),
+                'bert',
+                num_heads=12,
+                hidden_size=768,
+                optimization_options=opt_options
+            ).save_model_to_file(str(onnx_optimized_model_path))
+
+            onnx_model_path = onnx_optimized_model_path
 
         if quant:
             onnx_model_path = quantize(onnx_model_path)

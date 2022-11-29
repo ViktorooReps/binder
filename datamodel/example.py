@@ -99,8 +99,8 @@ def collate_examples(
             tuple(all_text_ids),
             tuple(all_example_starts),
             pad_sequence(all_input_ids, batch_first=True, padding_value=padding_token_id).long(),
-            pad_sequence(all_start_offsets, batch_first=True, padding_value=torch.nan).long(),
-            pad_sequence(all_end_offsets, batch_first=True, padding_value=torch.nan).long()
+            pad_sequence(all_start_offsets, batch_first=True, padding_value=-100).long(),
+            pad_sequence(all_end_offsets, batch_first=True, padding_value=-100).long()
         )
     return res
 
