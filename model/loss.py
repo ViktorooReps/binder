@@ -1,5 +1,5 @@
 import torch
-from torch import Tensor, LongTensor, logsumexp
+from torch import Tensor, LongTensor
 from torch.nn import Module
 
 REDUCTION = {
@@ -13,7 +13,7 @@ def my_logsumexp(masked_tensor: Tensor, tensor: Tensor):
     maxes = torch.amax(masked_tensor, dim=[-2, -1], keepdim=True)
     maxes = torch.masked_fill(maxes, maxes.abs() == float("inf"), 0)
 
-    result = torch.sum(torch.exp(masked_tensor - maxes), dim=[-2, -1], keepdim=True) + torch.exp(tensor - maxes)
+    result = torch.sum(torch.exp(masked_tensor - maxes), dim=[-2, -1], keepdim=True) + torch.exp(tensor - maxes)  # might overflow
     return result.log().add(maxes)
 
 
