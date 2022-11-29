@@ -56,7 +56,7 @@ class SpanClassifier(SerializableModel):
             ContrastiveThresholdLoss,
             unk_id=unk_entity_type_id,
             ignore_id=-100,
-            reduction='sum',
+            reduction='mean',
             beta=loss_beta
         )
         self._loss_fn: Optional[ContrastiveThresholdLoss] = None
@@ -104,7 +104,7 @@ class SpanClassifier(SerializableModel):
             return
 
         with torch.no_grad():
-            self._frozen_entity_representations = self._descriptions_encoder(self._encoded_descriptions)
+            self._frozen_entity_representations = self._descriptions_encoder(self._encoded_descriptions)  # TODO: split into batches
 
     def add_descriptions(self, descriptions: List[str]) -> None:
         self._encoded_descriptions = self._descriptions_encoder.prepare_inputs(descriptions)
@@ -124,7 +124,7 @@ class SpanClassifier(SerializableModel):
     def _get_entity_representations(self) -> Tensor:
         if self._frozen_entity_representations is not None:
             return self._frozen_entity_representations
-        return self._descriptions_encoder(self._encoded_descriptions)
+        return self._descriptions_encoder(self._encoded_descriptions)  # TODO: split into batches
 
     def _get_length_representations(self, token_representations: Tensor) -> Tensor:
         batch_size, sequence_length, representation_dims = token_representations.shape
