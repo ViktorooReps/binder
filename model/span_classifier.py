@@ -54,7 +54,6 @@ class SpanClassifier(SerializableModel):
         self._unk_entity_label_id = unk_entity_type_id
         self._loss_fn_factory = partial(
             ContrastiveThresholdLoss,
-            unk_id=unk_entity_type_id,
             ignore_id=-100,
             reduction='mean',
             beta=loss_beta

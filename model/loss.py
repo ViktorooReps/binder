@@ -11,11 +11,10 @@ REDUCTION = {
 
 class ContrastiveThresholdLoss(Module):
 
-    def __init__(self, n_classes: int, unk_id: int, ignore_id: int, reduction: str, beta: float):
+    def __init__(self, n_classes: int, ignore_id: int, reduction: str, beta: float):
         super(ContrastiveThresholdLoss, self).__init__()
         self._beta = beta
         self._n_classes = n_classes
-        self._unk_id = unk_id
         self._ignore_id = ignore_id
         self._reduce = REDUCTION[reduction]
 
@@ -31,9 +30,8 @@ class ContrastiveThresholdLoss(Module):
         classes = torch.arange(self._n_classes, device=device)
 
         ignore_mask = (true_ids == self._ignore_id).unsqueeze(1)  # (B, 1, S, N)
-        unk_mask = (true_ids == self._unk_id).unsqueeze(1)  # (B, 1, S, N)
         class_mask = (classes.reshape(1,  self._n_classes, 1, 1) == true_ids.unsqueeze(1))  # (B, C, S, N)
-        denominator_mask = ((~class_mask | unk_mask) & ~ignore_mask)  # elems for denominator
+        denominator_mask = (~class_mask & ~ignore_mask)  # elems for denominator
 
         predicted_scores = predicted_scores.swapaxes(-2, -1).swapaxes(-3, -2)  # (B, S, N, C) -> (B, C, S, N)
 
@@ -43,7 +41,7 @@ class ContrastiveThresholdLoss(Module):
         cls_score = denominator_score - predicted_scores[:, :, 0, 0]
 
         # mean over positives
-        positive_scores_mask = (~unk_mask & ~ignore_mask).repeat(1, self._n_classes, 1, 1)
+        positive_scores_mask = (~ignore_mask & class_mask).repeat(1, self._n_classes, 1, 1)
         predicted_scores[positive_scores_mask] = torch.nan
         predicted_scores = predicted_scores.nanmean(dim=[-2, -1])
 
