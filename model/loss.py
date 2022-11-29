@@ -1,5 +1,5 @@
 import torch
-from torch import Tensor, LongTensor, BoolTensor
+from torch import Tensor, LongTensor, BoolTensor, logsumexp
 from torch.nn import Module
 
 REDUCTION = {
@@ -12,19 +12,19 @@ REDUCTION = {
 def masked_logsumexp_w_elem(tensor: Tensor, mask: BoolTensor):
     masked_tensor = torch.clone(tensor)
     masked_tensor[~mask] = -torch.inf
-    maxes = torch.maximum(torch.amax(masked_tensor, [-1, -2], keepdim=True), tensor)
+    maxes = torch.maximum(torch.amax(masked_tensor, [-2, -1], keepdim=True), tensor)
     maxes = torch.masked_fill(maxes, maxes.abs() == float("inf"), 0)
     masked_exp_tensor = torch.exp(masked_tensor - maxes)
     exp_tensor = torch.exp(tensor - maxes)
     print(f't: {torch.isnan(tensor).sum()}/{torch.numel(tensor)}')
     print(f'met: {torch.isnan(masked_exp_tensor).sum()}/{torch.numel(masked_exp_tensor)}')
     print(f'et: {torch.isnan(exp_tensor).sum()}/{torch.numel(exp_tensor)}')
-    sum_w_elem = torch.sum(masked_exp_tensor, [-1, -2], keepdim=True) + exp_tensor
+    sum_w_elem = torch.sum(masked_exp_tensor, [-2, -1], keepdim=True) + exp_tensor
     swe = sum_w_elem.log().add(maxes)
     print(f'swe nan: {torch.isnan(swe).sum()}/{torch.numel(swe)}')
     print(f'swe > 1000: {(swe > 1000).sum()}/{torch.numel(swe)}')
     print(f'swe < -1000: {(swe < -1000).sum()}/{torch.numel(swe)}')
-    return swe
+    return logsumexp(masked_tensor, dim=[-2, -1], keepdim=True)
 
 
 class ContrastiveThresholdLoss(Module):
