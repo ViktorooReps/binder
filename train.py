@@ -28,8 +28,6 @@ def compute_metrics(
 
     unique_label_ids = set(np.unique(label_ids[label_ids != no_entity_category_id]))
 
-    pprint(category_id_mapping)
-
     labels = sorted(category_id_mapping.keys())
     f1_category_scores = f1_score(label_ids, predictions, average=None, labels=labels, zero_division=0)
     recall_category_scores = recall_score(label_ids, predictions, average=None, labels=labels, zero_division=0)
@@ -87,8 +85,6 @@ if __name__ == '__main__':
     category_id_mapping = dict(enumerate(category_names))
     category_id_mapping[unk_category_id] = unk_category
     category_mapping = invert(category_id_mapping)
-
-    pprint(category_mapping)
 
     model: SpanClassifier = SpanClassifier.from_args(model_args, category_descriptions, unk_entity_type_id=unk_category_id)
 

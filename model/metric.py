@@ -21,4 +21,4 @@ class CosSimilarity(Module):
         self._metric = CosineSimilarity(dim=-1)
 
     def forward(self, x: Tensor, y: Tensor) -> Tensor:
-        return (self._metric(x, y) + 1) / (2 * self._scale)
+        return self._metric(x, y) / self._scale
