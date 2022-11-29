@@ -23,4 +23,4 @@ class EntityDescriptionEncoder(SerializableModel):
         )
 
     def forward(self, encoding: BatchEncoding) -> Tensor:
-        return self._bert_encoder(**encoding).last_hidden_state[:, 0]  # select [CLS] token representation
+        return self._bert_encoder(**encoding.to(self.device)).last_hidden_state[:, 0]  # select [CLS] token representation

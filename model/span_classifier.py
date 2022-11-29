@@ -1,12 +1,10 @@
-import pickle
 from dataclasses import dataclass, field
 from functools import partial
-from pathlib import Path
-from typing import List, Tuple, Union, Optional, TypeVar, Iterable, Set, Dict, Type
+from typing import List, Tuple, Union, Optional, TypeVar, Iterable, Set, Dict
 
 import torch
 from torch import Tensor, BoolTensor, LongTensor
-from torch.nn import Module, Linear, Embedding, Parameter
+from torch.nn import Linear, Embedding
 from transformers import PreTrainedModel, AutoModel, AutoTokenizer, PreTrainedTokenizer, BatchEncoding
 from transformers.tokenization_utils_base import EncodingFast
 
@@ -14,32 +12,7 @@ from datamodel.example import Example, strided_split, TypedSpan, collate_example
 from model.encoder import EntityDescriptionEncoder
 from model.loss import ContrastiveThresholdLoss
 from model.metric import Metric, CosSimilarity
-
-
-_Model = TypeVar('_Model', bound='SerializableModel')
-
-
-class SerializableModel(Module):
-
-    def __init__(self):
-        super().__init__()
-        self._dummy_param = Parameter(torch.empty(0))
-
-    @property
-    def device(self) -> torch.device:
-        return self._dummy_param.device
-
-    def save(self, save_path: Path) -> None:
-        previous_device = self.device
-        self.cpu()
-        with open(save_path, 'wb') as f:
-            pickle.dump(self, f, pickle.HIGHEST_PROTOCOL)
-        self.to(previous_device)
-
-    @classmethod
-    def load(cls: Type[_Model], load_path: Path) -> _Model:
-        with open(load_path, 'rb') as f:
-            return pickle.load(f)
+from model.serializable import SerializableModel
 
 
 @dataclass
@@ -247,6 +220,7 @@ class SpanClassifier(SerializableModel):
 
         if labels is None:
             return predictions
+        labels = labels.to(self.device)
 
         # (C, H)
         entity_start_representations = self._entity_start_projection(entity_representations)
