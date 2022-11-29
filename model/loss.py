@@ -47,7 +47,7 @@ class ContrastiveThresholdLoss(Module):
 
         denominator_score = torch.clone(predicted_scores)
         denominator_score[~denominator_mask] = -torch.inf  # exp will turn this into 0
-        denominator_score = my_logsumexp(denominator_score)  # (B, C, S, N)
+        denominator_score = my_logsumexp(denominator_score, predicted_scores)  # (B, C, S, N)
         cls_score = denominator_score[:, :, 0, 0] - predicted_scores[:, :, 0, 0]
 
         contrastive_scores = denominator_score - predicted_scores
