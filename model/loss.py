@@ -33,12 +33,12 @@ class ContrastiveThresholdLoss(Module):
         ignore_mask = (true_ids == self._ignore_id).unsqueeze(1)  # (B, 1, S, N)
         unk_mask = (true_ids == self._unk_id).unsqueeze(1)  # (B, 1, S, N)
         class_mask = (classes.reshape(1,  self._n_classes, 1, 1) == true_ids.unsqueeze(1))  # (B, C, S, N)
-        denominator_mask = ((~class_mask | unk_mask) & ~ignore_mask)
+        denominator_mask = ((~class_mask | unk_mask) & ~ignore_mask)  # elems for denominator
 
         predicted_scores = predicted_scores.swapaxes(-2, -1).swapaxes(-3, -2)  # (B, S, N, C) -> (B, C, S, N)
 
         denominator_score = torch.clone(predicted_scores)
-        denominator_score[denominator_mask] = -torch.inf  # exp will turn this into 0
+        denominator_score[~denominator_mask] = -torch.inf  # exp will turn this into 0
         denominator_score = logsumexp(denominator_score, dim=[-2, -1])  # (B, C)
         cls_score = denominator_score - predicted_scores[:, :, 0, 0]
 
