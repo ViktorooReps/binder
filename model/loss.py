@@ -46,7 +46,7 @@ class ContrastiveThresholdLoss(Module):
         predicted_scores = predicted_scores.nanmean(dim=[-2, -1])
 
         # use [CLS] label as a threshold
-        contrastive_losses = -(denominator_score - predicted_scores)
-        threshold_losses = contrastive_losses * self._beta - (1 - self._beta) * cls_score
+        contrastive_losses = denominator_score - predicted_scores
+        threshold_losses = contrastive_losses * self._beta + (1 - self._beta) * cls_score
 
         return self._reduce(threshold_losses)
