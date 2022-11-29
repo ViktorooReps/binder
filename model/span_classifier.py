@@ -211,8 +211,6 @@ class SpanClassifier(SerializableModel):
 
         span_representations, span_padding = self._get_span_representations(token_representations)
         span_scores = self._compute_sim_scores(span_representations, self._entity_projection(entity_representations))
-        print(f'scores: min {span_scores.min()} max {span_scores.max()}')
-
         batch_size, _, _, n_classes = span_scores.shape
 
         entity_threshold = span_scores[:, 0, 0].reshape(batch_size, 1, 1, n_classes)  # is a sim score with [CLS] token and entities
@@ -242,6 +240,5 @@ class SpanClassifier(SerializableModel):
         start_loss = self._loss_fn(start_scores.unsqueeze(-2).repeat(1, 1, self._max_entity_length, 1), labels)
         end_loss = self._loss_fn(end_scores.unsqueeze(-2).repeat(1, 1, self._max_entity_length, 1), labels)
 
-        print(f'losses -- sp:{span_loss}, st:{start_loss}, e:{end_loss}')
         return self._span_coef * span_loss + self._start_coef * start_loss + self._end_coef * end_loss, predictions
 
