@@ -1,8 +1,5 @@
-from typing import List
-
 import torch
 from torch import Tensor, LongTensor, logsumexp
-from torch._prims_common import canonicalize_dims
 from torch.nn import Module
 
 REDUCTION = {
@@ -13,15 +10,11 @@ REDUCTION = {
 
 
 def my_logsumexp(masked_tensor: Tensor, tensor: Tensor):
-    batch_size, num_cats, seq_len, max_len = masked_tensor.shape
-    masked_tensor = masked_tensor.view(batch_size, num_cats, 1, seq_len, max_len)
-    maxes = torch.amax(masked_tensor, dim=[-2, -1], keepdim=False)
+    maxes = torch.amax(masked_tensor, dim=[-2, -1], keepdim=True)
     maxes = torch.masked_fill(maxes, maxes.abs() == float("inf"), 0)
-    tensor = tensor.view(batch_size, num_cats, -1)
 
-    maxes = torch.maximum(maxes, tensor)
-    result = torch.sum(torch.exp(masked_tensor - maxes.unsqueeze(-1).unsqueeze(-1)), dim=[-2, -1], keepdim=False)
-    return result.log().add(maxes).view(batch_size, num_cats, seq_len, max_len)
+    result = torch.sum(torch.exp(masked_tensor - maxes), dim=[-2, -1], keepdim=True) + torch.exp(tensor - maxes)
+    return result.log().add(maxes)
 
 
 class ContrastiveThresholdLoss(Module):
@@ -54,7 +47,7 @@ class ContrastiveThresholdLoss(Module):
 
         denominator_score = torch.clone(predicted_scores)
         denominator_score[~denominator_mask] = -torch.inf  # exp will turn this into 0
-        denominator_score = my_logsumexp(denominator_score, predicted_scores)  # (B, C, S, N)
+        denominator_score = my_logsumexp(denominator_score)  # (B, C, S, N)
         cls_score = denominator_score[:, :, 0, 0] - predicted_scores[:, :, 0, 0]
 
         contrastive_scores = denominator_score - predicted_scores
