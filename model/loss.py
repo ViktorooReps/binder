@@ -41,7 +41,7 @@ class ContrastiveThresholdLoss(Module):
         cls_score = denominator_score - predicted_scores[:, :, 0, 0]
 
         # mean over positives
-        positive_scores_mask = (~ignore_mask & class_mask).repeat(1, self._n_classes, 1, 1)
+        positive_scores_mask = (~ignore_mask & class_mask)
         predicted_scores[positive_scores_mask] = torch.nan
         predicted_scores = predicted_scores.nanmean(dim=[-2, -1])
 
