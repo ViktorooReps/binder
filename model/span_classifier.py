@@ -56,7 +56,7 @@ class SpanClassifier(SerializableModel):
             ContrastiveThresholdLoss,
             unk_id=unk_entity_type_id,
             ignore_id=-100,
-            reduction='mean',
+            reduction='sum',
             beta=loss_beta
         )
         self._loss_fn: Optional[ContrastiveThresholdLoss] = None
