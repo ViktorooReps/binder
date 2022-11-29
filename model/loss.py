@@ -1,5 +1,5 @@
 import torch
-from torch import Tensor, LongTensor, BoolTensor, logsumexp
+from torch import Tensor, LongTensor, logsumexp
 from torch.nn import Module
 
 REDUCTION = {
@@ -9,22 +9,11 @@ REDUCTION = {
 }
 
 
-def masked_logsumexp_w_elem(tensor: Tensor, mask: BoolTensor):
-    masked_tensor = torch.clone(tensor)
-    masked_tensor[~mask] = -torch.inf
-    maxes = torch.maximum(torch.amax(masked_tensor, [-2, -1], keepdim=True), tensor)
+def my_logsumexp(tensor: Tensor):
+    maxes = torch.amax(tensor, dim=[-2, -1], keepdim=True)
     maxes = torch.masked_fill(maxes, maxes.abs() == float("inf"), 0)
-    masked_exp_tensor = torch.exp(masked_tensor - maxes)
-    exp_tensor = torch.exp(tensor - maxes)
-    print(f't: {torch.isnan(tensor).sum()}/{torch.numel(tensor)}')
-    print(f'met: {torch.isnan(masked_exp_tensor).sum()}/{torch.numel(masked_exp_tensor)}')
-    print(f'et: {torch.isnan(exp_tensor).sum()}/{torch.numel(exp_tensor)}')
-    sum_w_elem = torch.sum(masked_exp_tensor, [-2, -1], keepdim=True) + exp_tensor
-    swe = sum_w_elem.log().add(maxes)
-    print(f'swe nan: {torch.isnan(swe).sum()}/{torch.numel(swe)}')
-    print(f'swe > 1000: {(swe > 1000).sum()}/{torch.numel(swe)}')
-    print(f'swe < -1000: {(swe < -1000).sum()}/{torch.numel(swe)}')
-    return logsumexp(masked_tensor, dim=[-2, -1], keepdim=True)
+    result = torch.sum(torch.exp(tensor - maxes), dim=[-2, -1], keepdim=True)
+    return result.log().add(maxes)
 
 
 class ContrastiveThresholdLoss(Module):
@@ -57,7 +46,7 @@ class ContrastiveThresholdLoss(Module):
 
         denominator_score = torch.clone(predicted_scores)
         denominator_score[~denominator_mask] = -torch.inf  # exp will turn this into 0
-        denominator_score = logsumexp(denominator_score, dim=[-2, -1], keepdim=True)  # (B, C)
+        denominator_score = my_logsumexp(denominator_score)  # (B, C, S, N)
         cls_score = denominator_score[:, :, 0, 0] - predicted_scores[:, :, 0, 0]
 
         contrastive_scores = denominator_score - predicted_scores
