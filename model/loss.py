@@ -20,7 +20,7 @@ def my_logsumexp(masked_tensor: Tensor, tensor: Tensor):
     tensor = tensor.view(batch_size, num_cats, -1)
 
     maxes = torch.maximum(maxes, tensor)
-    result = torch.sum(torch.exp(masked_tensor - maxes), dim=[-2, -1], keepdim=False)
+    result = torch.sum(torch.exp(masked_tensor - maxes.unsqueeze(-1).unsqueeze(-1)), dim=[-2, -1], keepdim=False)
     return result.log().add(maxes).view(batch_size, num_cats, seq_len, max_len)
 
 
