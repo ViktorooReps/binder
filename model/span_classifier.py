@@ -204,11 +204,7 @@ class SpanClassifier(SerializableModel):
         """Predicts entity type ids. If true label ids are given, calculates loss as well."""
 
         batch_size, sequence_length = input_ids.shape
-        input_ids = pad(input_ids, [0, 0, 0, self._max_sequence_length - sequence_length], value=self._tokenizer.pad_token_id)
-
-        if labels is not None and input_ids.shape != labels.shape[:2]:
-            print(labels.shape, input_ids.shape)
-            raise ValueError
+        input_ids = pad(input_ids, [0, self._max_sequence_length - sequence_length], value=self._tokenizer.pad_token_id)
 
         token_representations = self._token_encoder(input_ids=input_ids.to(self.device)).last_hidden_state  # (B, S, E)
         entity_representations = self._get_entity_representations()  # (C, E)
