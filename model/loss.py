@@ -66,6 +66,8 @@ class ContrastiveThresholdLoss(Module):
         contrastive_score[~positive_scores_mask] = torch.nan
         contrastive_losses = contrastive_score.nanmean(dim=[-2, -1])
 
+        contrastive_losses[contrastive_losses == torch.nan] = 0.0
+
         print(f'cl: {torch.isnan(contrastive_losses).sum()}/{torch.numel(contrastive_losses)}')
 
         # use [CLS] label as a threshold
