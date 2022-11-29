@@ -1,5 +1,5 @@
 import torch
-from torch import Tensor, LongTensor, logsumexp
+from torch import Tensor, LongTensor, logsumexp, BoolTensor
 from torch.nn import Module
 
 REDUCTION = {
@@ -7,6 +7,16 @@ REDUCTION = {
     'sum': torch.nansum,
     'none': lambda x, dim: x
 }
+
+
+def masked_logsumexp_w_elem(tensor: Tensor, mask: BoolTensor):
+    masked_tensor = torch.clone(tensor)
+    masked_tensor[~mask] = -torch.inf
+    maxes = torch.amax(masked_tensor, [-1, -2], keepdim=True)
+    masked_exp_tensor = torch.exp(masked_tensor - maxes)
+    exp_tensor = torch.exp(tensor - maxes)  # might cause overflow
+    sum_w_elem = torch.sum(masked_exp_tensor, [-1, -2], keepdim=True) + exp_tensor
+    return sum_w_elem.log().add(maxes)
 
 
 class ContrastiveThresholdLoss(Module):
@@ -37,18 +47,16 @@ class ContrastiveThresholdLoss(Module):
 
         predicted_scores = predicted_scores.swapaxes(-2, -1).swapaxes(-3, -2)  # (B, S, N, C) -> (B, C, S, N)
 
-        denominator_score = torch.clone(predicted_scores)
-        denominator_score[~denominator_mask] = -torch.inf  # exp will turn this into 0
-        denominator_score = logsumexp(denominator_score, dim=[-2, -1])  # (B, C)
-        cls_score = denominator_score - predicted_scores[:, :, 0, 0]
+        denominator_score = masked_logsumexp_w_elem(predicted_scores, denominator_mask)  # (B, C, S, N)
+        contrastive_score = denominator_score - predicted_scores
+        cls_score = contrastive_score[:, :, 0, 0]
 
         # mean over positives
         positive_scores_mask = (~ignore_mask & class_mask)
-        predicted_scores[~positive_scores_mask] = torch.nan
-        predicted_scores = predicted_scores.nanmean(dim=[-2, -1])
+        contrastive_score[~positive_scores_mask] = torch.nan
+        contrastive_losses = contrastive_score.nanmean(dim=[-2, -1])
 
         # use [CLS] label as a threshold
-        contrastive_losses = denominator_score - predicted_scores
         threshold_losses = contrastive_losses * self._beta + (1 - self._beta) * cls_score
 
         return self._reduce(threshold_losses)
