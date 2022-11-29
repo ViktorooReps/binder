@@ -106,6 +106,7 @@ if __name__ == '__main__':
     trainer.train()
 
     metrics = trainer.evaluate(eval_dataset=test_dataset)
+    pprint(metrics)
 
     def normalize(d: Dict[str, Any]) -> Dict[str, str]:
         return {k: str(v) for k, v in d.items()}
