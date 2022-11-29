@@ -5,6 +5,7 @@ from typing import List, Tuple, Union, Optional, TypeVar, Iterable, Set, Dict
 import torch
 from torch import Tensor, BoolTensor, LongTensor
 from torch.nn import Linear, Embedding
+from torch.nn.functional import pad
 from transformers import PreTrainedModel, AutoModel, AutoTokenizer, PreTrainedTokenizer, BatchEncoding
 from transformers.tokenization_utils_base import EncodingFast
 
@@ -201,6 +202,9 @@ class SpanClassifier(SerializableModel):
 
     def forward(self, input_ids: LongTensor, labels: Optional[LongTensor] = None) -> Union[LongTensor, Tuple[Tensor, LongTensor]]:
         """Predicts entity type ids. If true label ids are given, calculates loss as well."""
+
+        batch_size, sequence_length = input_ids.shape
+        input_ids = pad(input_ids, [0, 0, 0, self._max_sequence_length - sequence_length], value=self._tokenizer.pad_token_id)
 
         token_representations = self._token_encoder(input_ids=input_ids.to(self.device)).last_hidden_state  # (B, S, E)
         entity_representations = self._get_entity_representations()  # (C, E)
