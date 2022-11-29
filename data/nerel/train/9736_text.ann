@@ -1,0 +1,118 @@
+T1	CITY 2 8	Москве
+T2	PERSON 27 41	Габдулле Тукаю
+T3	PROFESSION 42 47	Мэром
+T4	PERSON 55 69	Юрием Лужковым
+T5	PERSON 150 164	Габдулле Тукаю
+T6	FACILITY 168 187	Новокузнецкой улице
+T8	ORGANIZATION 289 309	Общественного совета
+T9	CITY 409 415	Москве
+T10	PROFESSION 445 454	скульптор
+T12	PERSON 533 547	Габдулле Тукаю
+T13	CITY 550 556	Москве
+T14	ORGANIZATION 558 576	Общественный совет
+T15	ORGANIZATION 677 703	Татарский культурный центр
+T16	EVENT 722 730	Сабантуи
+T18	CITY 762 768	Москве
+T19	ORGANIZATION 905 914	ИА REGNUM
+T20	PERSON 917 931	Габдулла Тукай
+T21	PROFESSION 970 989	литературный критик
+T22	PROFESSION 991 1000	публицист
+T23	DATE 1015 1026	В 2011 году
+T24	AGE 1038 1045	125 лет
+T25	ORGANIZATION 1090 1097	ТЮРКСОЙ
+T26	DATE 1098 1106	2011 год
+T28	CITY 48 54	Москвы
+T29	PROFESSION 42 54	Мэром Москвы
+T30	PROFESSION 144 149	поэту
+T31	NATIONALITY 133 143	татарскому
+T32	CITY 197 203	Москвы
+T7	DATE 204 221	в 2010-2011 годах
+T33	NATIONALITY 945 954	татарский
+T34	PROFESSION 964 968	поэт
+T35	PROFESSION 1003 1013	переводчик
+T27	PERSON 1122 1127	Тукая
+T36	EVENT 1116 1127	Годом Тукая
+T37	NATIONALITY 839 849	татарскими
+T38	NATIONALITY 778 787	татарскую
+T17	CITY 704 710	Москвы
+T39	ORGANIZATION 677 710	Татарский культурный центр Москвы
+T11	PERSON 455 470	Сергей Щербаков
+T40	COUNTRY 644 650	России
+T41	NATIONALITY 388 397	татарской
+T42	NATIONALITY 618 627	татарских
+T43	FACILITY 18 41	памятник Габдулле Тукаю
+T44	FACILITY 523 547	памятника Габдулле Тукаю
+R1	WORKS_AS Arg1:T4 Arg2:T29	
+R2	WORKPLACE Arg1:T4 Arg2:T28	
+R3	WORKS_AS Arg1:T5 Arg2:T30	
+R4	ORIGINS_FROM Arg1:T5 Arg2:T31	
+R5	LOCATED_IN Arg1:T6 Arg2:T32	
+R6	WORKS_AS Arg1:T11 Arg2:T10	
+R7	LOCATED_IN Arg1:T44 Arg2:T13	
+R8	ORIGINS_FROM Arg1:T20 Arg2:T33	
+R9	WORKS_AS Arg1:T20 Arg2:T34	
+R10	WORKS_AS Arg1:T20 Arg2:T21	
+R11	WORKS_AS Arg1:T20 Arg2:T22	
+R12	WORKS_AS Arg1:T20 Arg2:T35	
+R13	AGE_IS Arg1:T27 Arg2:T24	
+R14	POINT_IN_TIME Arg1:T36 Arg2:T26	
+R15	WORKPLACE Arg1:T29 Arg2:T28	
+T45	FACILITY 111 164	памятника знаменитому татарскому поэту Габдулле Тукаю
+R16	LOCATED_IN Arg1:T43 Arg2:T1	
+R17	LOCATED_IN Arg1:T45 Arg2:T6	
+R18	PRODUCES Arg1:T11 Arg2:T45	
+T46	EVENT 75 97	подписано распоряжение
+R19	AGENT Arg1:T4 Arg2:T46	
+R20	TAKES_PLACE_IN Arg1:T46 Arg2:T28	
+R21	INANIMATE_INVOLVED Arg1:T45 Arg2:T46	
+R22	HEADQUARTERED_IN Arg1:T8 Arg2:T28	
+R23	LOCATED_IN Arg1:T13 Arg2:T40	
+T47	NATIONALITY 677 686	Татарский
+R24	HEADQUARTERED_IN Arg1:T39 Arg2:T17	
+N1	Reference T15 Wikidata:NULL	нет данных
+N2	Reference T1 Wikidata:Q649	Москва
+N3	Reference T32 Wikidata:Q649	Москва
+N4	Reference T28 Wikidata:Q649	Москва
+N5	Reference T13 Wikidata:Q649	Москва
+R25	HEADQUARTERED_IN Arg1:T14 Arg2:T13	
+N6	Reference T17 Wikidata:Q649	Москва
+N7	Reference T18 Wikidata:Q649	Москва
+N8	Reference T5 Wikidata:Q315279	Габдулла Тукай
+N9	Reference T27 Wikidata:Q315279	Габдулла Тукай
+N10	Reference T20 Wikidata:Q315279	Габдулла Тукай
+N11	Reference T31 Wikidata:Q35565	
+N12	Reference T41 Wikidata:Q35565	
+R26	PLACE_RESIDES_IN Arg1:T41 Arg2:T9	
+R27	PLACE_RESIDES_IN Arg1:T42 Arg2:T40	
+N13	Reference T42 Wikidata:Q35565	
+N14	Reference T47 Wikidata:Q35565	
+N15	Reference T38 Wikidata:Q35565	
+N16	Reference T33 Wikidata:Q35565	
+R28	ORIGINS_FROM Arg1:T34 Arg2:T33	
+R29	ALTERNATIVE_NAME Arg1:T43 Arg2:T45	
+N18	Reference T30 Wikidata:Q49757	поэт
+N19	Reference T34 Wikidata:Q49757	поэт
+N17	Reference T43 Wikidata:Q16271032	
+N20	Reference T45 Wikidata:Q16271032	
+N21	Reference T44 Wikidata:Q16271032	
+N22	Reference T6 Wikidata:Q4324317	
+N23	Reference T4 Wikidata:Q156379	Юрий Михайлович Лужков
+N24	Reference T3 Wikidata:Q30185	мэр
+N25	Reference T29 Wikidata:Q1837906	мэр Москвы
+N26	Reference T9 Wikidata:Q649	Москва
+N27	Reference T8 Wikidata:NULL	нет данных
+N28	Reference T10 Wikidata:Q1281618	скульптор
+N30	Reference T12 Wikidata:Q315279	Габдулла Тукай
+N31	Reference T40 Wikidata:Q159	Россия
+R30	ORIGINS_FROM Arg1:T39 Arg2:T47	
+N32	Reference T39 Wikidata:NULL	нет данных
+N33	Reference T16 Wikidata:Q1640068	
+N34	Reference T19 Wikidata:Q1977770	REGNUM
+N35	Reference T25 Wikidata:Q1993710	
+N36	Reference T21 Wikidata:Q4263842	
+N37	Reference T22 Wikidata:Q6051619	
+N38	Reference T35 Wikidata:Q6051619	
+N39	Reference T2 Wikidata:Q315279	Габдулла Тукай
+N40	Reference T37 Wikidata:Q35565	
+N41	Reference T14 Wikidata:NULL	нет данных
+N29	Reference T11 Wikidata:Q15060901	

@@ -1,0 +1,81 @@
+T1	PERSON 0 21	Александр Старовойтов
+T2	ORGANIZATION 49 51	U2
+T3	PROFESSION 81 116	Депутат государственной думы России
+T4	COUNTRY 110 116	России
+T5	PERSON 117 138	Александр Старовойтов
+T6	ORGANIZATION 166 168	U2
+T7	ORGANIZATION 214 237	генеральную прокуратуру
+T8	ORGANIZATION 297 302	Apple
+T10	PERSON 380 401	Александр Старовойтов
+T11	ORGANIZATION 414 419	Apple
+T12	ORGANIZATION 513 515	U2
+T13	NUMBER 555 568	500 миллионам
+T14	PRODUCT 583 589	iTunes
+T15	DATE 603 623	в сентябре 2014 года
+T16	PROFESSION 645 655	барабанщик
+T17	PERSON 663 683	Ларри Маллен-младший
+T18	AGE 700 710	18-летнего
+T19	PERSON 716 722	Элвиса
+T20	PERSON 773 787	Глена Лачфорда
+T21	PERSON 956 967	Старовойтов
+T22	ORGANIZATION 1010 1012	U2
+T23	ORGANIZATION 1104 1112	Известия
+T24	PROFESSION 1129 1137	адвоката
+T25	PERSON 1138 1153	Евгения Тонкого
+T26	ORGANIZATION 1183 1188	Apple
+T27	ORGANIZATION 89 116	государственной думы России
+T28	ORGANIZATION 375 379	ЛДПР
+T29	WORK_OF_ART 530 548	Songs of Innocence
+T30	IDEOLOGY 1067 1082	прокремлевскими
+T31	CRIME 53 79	пропаганду гомосексуализма
+T32	CRIME 170 196	пропаганду гомосексуализма
+R1	WORKS_AS Arg1:T5 Arg2:T3	
+R2	WORKPLACE Arg1:T5 Arg2:T4	
+T33	CRIME 315 341	пропаганды гомосексуализма
+R3	MEMBER_OF Arg1:T10 Arg2:T28	
+R4	PRODUCES Arg1:T12 Arg2:T29	
+R5	WORKS_AS Arg1:T17 Arg2:T16	
+R6	PARENT_OF Arg1:T17 Arg2:T19	
+R7	AGE_IS Arg1:T19 Arg2:T18	
+R8	WORKS_AS Arg1:T25 Arg2:T24	
+R9	PRODUCES Arg1:T8 Arg2:T14	
+R10	WORKPLACE Arg1:T3 Arg2:T27	
+T9	ORGANIZATION 89 109	государственной думы
+R11	HEADQUARTERED_IN Arg1:T27 Arg2:T4	
+T34	CRIME 314 367	«пропаганды гомосексуализма» среди несовершеннолетних
+T35	EVENT 480 505	закачала последний альбом
+R12	AGENT Arg1:T11 Arg2:T35	
+R13	PARTICIPANT_IN Arg1:T12 Arg2:T35	
+R14	POINT_IN_TIME Arg1:T35 Arg2:T15	
+R15	ALTERNATIVE_NAME Arg1:T10 Arg2:T21	
+R16	IDEOLOGY_OF Arg1:T23 Arg2:T30	
+R17	CONVICTED_OF Arg1:T2 Arg2:T31	
+R18	CONVICTED_OF Arg1:T6 Arg2:T32	
+R19	HEADQUARTERED_IN Arg1:T7 Arg2:T4	
+R20	CONVICTED_OF Arg1:T8 Arg2:T34	
+N1	Reference T3 Wikidata:Q17276321	
+N2	Reference T27 Wikidata:Q715641	Государственная дума
+N3	Reference T9 Wikidata:Q715641	Государственная дума
+N4	Reference T1 Wikidata:Q28500608	
+N5	Reference T5 Wikidata:Q28500608	
+N6	Reference T2 Wikidata:Q396	
+N7	Reference T6 Wikidata:Q396	
+N8	Reference T22 Wikidata:Q396	
+N9	Reference T4 Wikidata:Q159	Россия
+N10	Reference T10 Wikidata:Q28500608	
+N11	Reference T21 Wikidata:Q28500608	
+N12	Reference T8 Wikidata:Q312	Apple
+N13	Reference T11 Wikidata:Q312	Apple
+N14	Reference T26 Wikidata:Q312	Apple
+N15	Reference T7 Wikidata:Q2387440	Прокуратура Российской Федерации
+N16	Reference T28 Wikidata:Q212115	ЛДПР
+N17	Reference T12 Wikidata:Q396	
+N18	Reference T29 Wikidata:Q14037150	
+N19	Reference T14 Wikidata:Q9589	iTunes
+N20	Reference T16 Wikidata:Q386854	барабанщик
+N21	Reference T17 Wikidata:Q814065	
+N22	Reference T19 Wikidata:NULL	нет данных
+N23	Reference T20 Wikidata:Q4140847	
+N24	Reference T23 Wikidata:Q753932	Известия
+N25	Reference T24 Wikidata:Q380075	
+N26	Reference T25 Wikidata:NULL	нет данных
