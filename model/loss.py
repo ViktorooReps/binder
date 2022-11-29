@@ -42,6 +42,7 @@ class ContrastiveThresholdLoss(Module):
         denominator_score = logsumexp(denominator_score, dim=[-2, -1])  # (B, C)
         cls_score = denominator_score - predicted_scores[:, :, 0, 0]
 
+        # mean over positives
         positive_scores_mask = (~unk_mask & ~ignore_mask).repeat(1, self._n_classes, 1, 1)
         predicted_scores[positive_scores_mask] = torch.nan
         predicted_scores = predicted_scores.nanmean(dim=[-2, -1])
@@ -50,6 +51,4 @@ class ContrastiveThresholdLoss(Module):
         contrastive_losses = denominator_score - predicted_scores
         threshold_losses = contrastive_losses * self._beta - (1 - self._beta) * cls_score
 
-        # select only positive scores
-        positive_scores_mask = (~unk_mask & ~ignore_mask).repeat(1, self._n_classes, 1, 1)
-        return self._reduce(threshold_losses[positive_scores_mask])
+        return self._reduce(threshold_losses)
