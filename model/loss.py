@@ -29,7 +29,7 @@ class ContrastiveThresholdLoss(Module):
         device = predicted_scores.device
         classes = torch.arange(self._n_classes, device=device)
 
-        ignore_mask = (true_ids == self._ignore_id).unsqueeze(1)  # (B, 1, S, N)
+        ignore_mask = (true_ids == self._ignore_id).unsqueeze(1).repeat(1,  self._n_classes, 1, 1)  # (B, C, S, N)
         class_mask = (classes.reshape(1,  self._n_classes, 1, 1) == true_ids.unsqueeze(1))  # (B, C, S, N)
         denominator_mask = (~ignore_mask)  # elems for denominator
 
