@@ -1,5 +1,8 @@
+from typing import List
+
 import torch
 from torch import Tensor, LongTensor, logsumexp
+from torch._prims_common import canonicalize_dims
 from torch.nn import Module
 
 REDUCTION = {
@@ -9,12 +12,22 @@ REDUCTION = {
 }
 
 
+def _squeeze_multiple(tensor: Tensor, dims: List[int]) -> Tensor:
+    ndim = tensor.dim()
+    wrapped_dims = canonicalize_dims(ndim, dims)
+    assert isinstance(wrapped_dims, tuple)
+    for idx in range(ndim - 1, -1, -1):
+        if idx in wrapped_dims:
+            tensor = tensor.squeeze(idx)
+    return tensor
+
+
 def my_logsumexp(masked_tensor: Tensor, tensor: Tensor):
     batch_size, num_cats, seq_len, max_len = masked_tensor.shape
     masked_tensor = masked_tensor.view(batch_size, num_cats, 1, seq_len, max_len)
-    maxes = torch.amax(masked_tensor, dim=[-2, -1], keepdim=True)
+    maxes = torch.amax(masked_tensor, dim=[-2, -1], keepdim=False)
     maxes = torch.masked_fill(maxes, maxes.abs() == float("inf"), 0)
-    tensor = tensor.view(batch_size, num_cats, -1, 1, 1)
+    tensor = tensor.view(batch_size, num_cats, -1)
 
     maxes = torch.maximum(maxes, tensor)
     result = torch.sum(torch.exp(masked_tensor - maxes), dim=[-2, -1], keepdim=False)
