@@ -88,7 +88,7 @@ class SpanClassifier(SerializableModel):
     @classmethod
     def from_args(cls: _Model, args: ModelArguments, descriptions: List[str], unk_entity_type_id: int) -> _Model:
         return cls(
-            args.bert_model, descriptions, unk_entity_type_id, CosSimilarity(scale=0.07),
+            args.bert_model, descriptions, unk_entity_type_id, CosSimilarity(scale=0.1),
             hidden_size=args.hidden_size,
             max_sequence_length=args.max_sequence_length,
             max_entity_length=args.max_entity_length,
