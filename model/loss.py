@@ -27,10 +27,12 @@ class ContrastiveThresholdLoss(Module):
         :return: loss with applied reduction
         """
         assert (true_ids[:, 0, 0] == self._ignore_id).all()  # the first label should be [CLS]
+        device = predicted_scores.device
+        classes = torch.arange(self._n_classes, device=device)
 
         ignore_mask = (true_ids == self._ignore_id).unsqueeze(1)  # (B, 1, S, N)
         unk_mask = (true_ids == self._unk_id).unsqueeze(1)  # (B, 1, S, N)
-        class_mask = (torch.arange(self._n_classes).reshape(1,  self._n_classes, 1, 1) == true_ids.unsqueeze(1))  # (B, C, S, N)
+        class_mask = (classes.reshape(1,  self._n_classes, 1, 1) == true_ids.unsqueeze(1))  # (B, C, S, N)
         denominator_mask = ((~class_mask | unk_mask) & ~ignore_mask)
 
         predicted_scores = predicted_scores.swapaxes(-2, -1).swapaxes(-3, -2)  # (B, S, N, C) -> (B, C, S, N)
