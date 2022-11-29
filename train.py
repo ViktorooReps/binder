@@ -1,5 +1,6 @@
 import logging
 from functools import partial
+from pathlib import Path
 from pprint import pprint
 from typing import Dict, Any
 
@@ -7,9 +8,11 @@ import numpy as np
 from sklearn.metrics import f1_score, recall_score, precision_score
 from torch.utils.tensorboard import SummaryWriter
 from transformers import Trainer, HfArgumentParser, TrainingArguments, EvalPrediction
+from transformers.modeling_utils import unwrap_model
 
 from datamodel.configuration import DatasetArguments, get_datasets, DatasetName, get_descriptions
 from datamodel.utils import invert
+from model.inference import InferenceBinder
 from model.span_classifier import ModelArguments, SpanClassifier
 
 logger = logging.getLogger(__name__)
@@ -110,5 +113,16 @@ if __name__ == '__main__':
 
     def normalize(d: Dict[str, Any]) -> Dict[str, str]:
         return {k: str(v) for k, v in d.items()}
+
+
+    trained_model: SpanClassifier = unwrap_model(trainer.model_wrapped)
+    trained_model.cpu()
+    InferenceBinder(
+        trained_model,
+        category_mapping=category_mapping,
+        no_entity_category=unk_category,
+        max_sequence_length=model_args.max_sequence_length,
+        max_entity_length=model_args.max_entity_length
+    ).save(Path(model_args.save_path))
 
     tb_writer.add_hparams(hparam_dict={**normalize(model_args.__dict__), **normalize(training_args.__dict__)}, metric_dict=metrics)

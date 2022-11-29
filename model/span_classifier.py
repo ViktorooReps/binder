@@ -19,6 +19,7 @@ from model.serializable import SerializableModel
 @dataclass
 class ModelArguments:
     bert_model: str = field(metadata={'help': 'Name of the BERT HuggingFace model to use.'})
+    save_path: str = field(metadata={'help': 'Model save path'})
     hidden_size: int = field(default=128, metadata={'help': 'Hidden representations of vector spaces.'})
     max_sequence_length: int = field(default=128, metadata={'help': 'Maximum length in tokens of an example.'})
     max_entity_length: int = field(default=30, metadata={'help': 'Maximum length in tokens of an entity.'})
@@ -88,7 +89,7 @@ class SpanClassifier(SerializableModel):
     @classmethod
     def from_args(cls: _Model, args: ModelArguments, descriptions: List[str], unk_entity_type_id: int) -> _Model:
         return cls(
-            args.bert_model, descriptions, unk_entity_type_id, CosSimilarity(scale=0.1),
+            args.bert_model, descriptions, unk_entity_type_id, CosSimilarity(scale=0.07),  # TODO: implement annealing temperature
             hidden_size=args.hidden_size,
             max_sequence_length=args.max_sequence_length,
             max_entity_length=args.max_entity_length,
@@ -104,6 +105,9 @@ class SpanClassifier(SerializableModel):
 
         with torch.no_grad():
             self._frozen_entity_representations = self._descriptions_encoder(self._encoded_descriptions)  # TODO: split into batches
+
+    def drop_descriptions_encoder(self):
+        self._descriptions_encoder = None
 
     def add_descriptions(self, descriptions: List[str]) -> None:
         self._encoded_descriptions = self._descriptions_encoder.prepare_inputs(descriptions)
@@ -164,7 +168,7 @@ class SpanClassifier(SerializableModel):
     def prepare_inputs(
             self,
             texts: List[str],
-            entities: List[Set[TypedSpan]],
+            entities: List[Optional[Set[TypedSpan]]],
             *,
             stride: float = 1/8,
             category_mapping: Dict[str, int],
@@ -191,15 +195,15 @@ class SpanClassifier(SerializableModel):
                 cls_token_id=self._tokenizer.cls_token_id
             )
 
-    def collate_examples(self, examples: Iterable[Example]) -> Dict[str, Optional[LongTensor]]:
+    def collate_examples(self, examples: Iterable[Example], return_batch_examples: bool = False) -> Dict[str, Optional[LongTensor]]:
         return collate_examples(
             examples,
             padding_token_id=self._tokenizer.pad_token_id,
             pad_length=self._max_sequence_length,
-            return_batch_examples=False
+            return_batch_examples=return_batch_examples
         )
 
-    def forward(self, input_ids: LongTensor, labels: Optional[LongTensor] = None) -> Union[LongTensor, Tuple[Tensor, LongTensor]]:
+    def forward(self, input_ids: LongTensor, labels: Optional[LongTensor] = None, **_) -> Union[LongTensor, Tuple[Tensor, LongTensor]]:
         """Predicts entity type ids. If true label ids are given, calculates loss as well."""
 
         batch_size, sequence_length = input_ids.shape

@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass, fields
-from typing import Tuple, Iterable, Optional, Union, Dict, List, Set
+from typing import Tuple, Iterable, Optional, Union, Dict, List, Set, Callable, Any
 
 import torch
 from torch import LongTensor
@@ -108,20 +108,20 @@ def collate_examples(
 def batch_examples(
         examples: Iterable[Example],
         *,
-        padding_token_id: int,
+        collate_fn: Callable[[Iterable[Example]], Dict[str, Union[BatchedExamples, LongTensor]]],
         batch_size: int = 1
 ) -> Iterable[Dict[str, Union[BatchedExamples, LongTensor]]]:
     """Groups examples into batches."""
     curr_batch = []
     for example in examples:
         if len(curr_batch) == batch_size:
-            yield collate_examples(curr_batch, padding_token_id=padding_token_id)
+            yield collate_fn(curr_batch)
             curr_batch = []
 
         curr_batch.append(example)
 
     if len(curr_batch):
-        yield collate_examples(curr_batch, padding_token_id=padding_token_id)
+        yield collate_fn(curr_batch)
 
 
 def strided_split(

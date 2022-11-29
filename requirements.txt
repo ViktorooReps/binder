@@ -41,3 +41,5 @@ transformers==4.24.0
 typing_extensions==4.4.0
 urllib3==1.26.12
 Werkzeug==2.2.2
+
+onnxruntime==1.13.1
