@@ -211,6 +211,7 @@ class SpanClassifier(SerializableModel):
 
         span_representations, span_padding = self._get_span_representations(token_representations)
         span_scores = self._compute_sim_scores(span_representations, self._entity_projection(entity_representations))
+        print(f'scores: min {span_scores.min()} max {span_scores.max()}')
 
         batch_size, _, _, n_classes = span_scores.shape
 
