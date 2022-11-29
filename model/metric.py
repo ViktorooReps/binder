@@ -14,10 +14,9 @@ class Metric(Module, metaclass=ABCMeta):
 
 class CosSimilarity(Module):
 
-    def __init__(self, scale: float, freeze_scale: bool):
+    def __init__(self, scale: float):
         super().__init__()
-        self._scale = Parameter(torch.tensor(scale))
-        self._scale.requires_grad = not freeze_scale
+        self._scale = scale
         self._metric = CosineSimilarity(dim=-1)
 
     def forward(self, x: Tensor, y: Tensor) -> Tensor:
