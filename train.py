@@ -42,7 +42,7 @@ def compute_metrics(
             continue
 
         if category_id not in unique_label_ids:
-            logger.info(f'Skipping {category_id_mapping[category_id]}: {f1}, {recall}, {precision}')
+            logger.info(f'Skipping {category_id}: {f1}, {recall}, {precision}')
 
         category = category_id_mapping[category_id]
         results[f'F1_{category}'] = f1

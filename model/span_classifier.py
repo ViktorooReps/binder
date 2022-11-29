@@ -241,5 +241,6 @@ class SpanClassifier(SerializableModel):
         start_loss = self._loss_fn(start_scores.unsqueeze(-2).repeat(1, 1, self._max_entity_length, 1), labels)
         end_loss = self._loss_fn(end_scores.unsqueeze(-2).repeat(1, 1, self._max_entity_length, 1), labels)
 
+        print(f'losses -- sp:{span_loss}, st:{start_loss}, e:{end_loss}')
         return self._span_coef * span_loss + self._start_coef * start_loss + self._end_coef * end_loss, predictions
 
