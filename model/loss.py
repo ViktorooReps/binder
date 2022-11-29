@@ -55,20 +55,17 @@ class ContrastiveThresholdLoss(Module):
 
         predicted_scores = predicted_scores.swapaxes(-2, -1).swapaxes(-3, -2)  # (B, S, N, C) -> (B, C, S, N)
 
-        denominator_score = masked_logsumexp_w_elem(predicted_scores, denominator_mask)  # (B, C, S, N)
-        contrastive_score = denominator_score - predicted_scores
-        cls_score = contrastive_score[:, :, 0, 0]
+        denominator_score = torch.clone(predicted_scores)
+        denominator_score[~denominator_mask] = -torch.inf  # exp will turn this into 0
+        denominator_score = logsumexp(denominator_score, dim=[-2, -1], keepdim=True)  # (B, C)
+        cls_score = denominator_score[:, :, 0, 0] - predicted_scores[:, :, 0, 0]
 
-        print(f'cs: {torch.isnan(contrastive_score).sum()}/{torch.numel(contrastive_score)}')
+        contrastive_scores = denominator_score - predicted_scores
 
         # mean over positives
         positive_scores_mask = (~ignore_mask & class_mask)
-        contrastive_score[~positive_scores_mask] = torch.nan
-        contrastive_losses = contrastive_score.nanmean(dim=[-2, -1])
-
-        contrastive_losses[contrastive_losses.isnan()] = 0.0
-
-        print(f'cl: {torch.isnan(contrastive_losses).sum()}/{torch.numel(contrastive_losses)}')
+        contrastive_scores[~positive_scores_mask] = torch.nan
+        contrastive_losses = contrastive_scores.nanmean(dim=[-2, -1])
 
         # use [CLS] label as a threshold
         threshold_losses = contrastive_losses * self._beta + (1 - self._beta) * cls_score
