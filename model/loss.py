@@ -9,11 +9,16 @@ REDUCTION = {
 }
 
 
-def my_logsumexp(tensor: Tensor):
-    maxes = torch.amax(tensor, dim=[-2, -1], keepdim=True)
+def my_logsumexp(masked_tensor: Tensor, tensor: Tensor):
+    batch_size, num_cats, seq_len, max_len = masked_tensor.shape
+    masked_tensor = masked_tensor.view(batch_size, num_cats, 1, seq_len, max_len)
+    maxes = torch.amax(masked_tensor, dim=[-2, -1], keepdim=True)
     maxes = torch.masked_fill(maxes, maxes.abs() == float("inf"), 0)
-    result = torch.sum(torch.exp(tensor - maxes), dim=[-2, -1], keepdim=True)
-    return result.log().add(maxes)
+    tensor = tensor.view(batch_size, num_cats, -1, 1, 1)
+
+    maxes = torch.maximum(maxes, tensor)
+    result = torch.sum(torch.exp(masked_tensor - maxes), dim=[-2, -1], keepdim=False)
+    return result.log().add(maxes).view(batch_size, num_cats, seq_len, max_len)
 
 
 class ContrastiveThresholdLoss(Module):
