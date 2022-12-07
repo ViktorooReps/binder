@@ -87,7 +87,7 @@ class InferenceBinder(SerializableModel):
             stride=stride
         ))
 
-        max_strided_length = ((self._max_sequence_length // stride_length) + (self._max_sequence_length % stride_length)) * stride_length
+        max_strided_length = ((self._max_sequence_length // stride_length) + (self._max_sequence_length % stride_length > 0)) * stride_length
 
         no_entity_category_id = self._category_mapping[self._no_entity_category]
 
