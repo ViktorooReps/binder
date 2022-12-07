@@ -198,7 +198,8 @@ def strided_split(
     # split encoding into max_length-token chunks
 
     chunk_start = 0
-    while chunk_start < sequence_length:
+    chunk_end = 0
+    while chunk_start < sequence_length and chunk_end != sequence_length:
         chunk_end = min(chunk_start + max_sequence_length - 1, sequence_length)  # -1 for cls token
         ex = Example(
             text_id,

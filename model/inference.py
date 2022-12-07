@@ -78,7 +78,8 @@ class InferenceBinder(SerializableModel):
 
     @torch.no_grad()
     def forward(self, texts: List[str]) -> List[Set[TypedSpan]]:
-        stride = 1
+        stride = 0.2
+        stride_length = int(self._max_sequence_length * stride)
         examples = list(self._classifier.prepare_inputs(
             texts, [None] * len(texts),
             category_mapping=self._category_mapping,
@@ -86,10 +87,11 @@ class InferenceBinder(SerializableModel):
             stride=stride
         ))
 
+        max_strided_length = ((self._max_sequence_length / stride_length) + (self._max_sequence_length % stride_length)) * stride_length
+
         no_entity_category_id = self._category_mapping[self._no_entity_category]
 
         predictions_collector = [defaultdict(int) for _ in texts]
-        total_predictions = [0 for _ in texts]
         for batch in tqdm(batch_examples(
                 examples,
                 batch_size=1,
@@ -124,6 +126,7 @@ class InferenceBinder(SerializableModel):
             padding_mask = torch.concat(padding_masks, dim=-1)
 
             entities_mask = ((predictions != no_entity_category_id) & padding_mask & (span_end != -100) & (span_start != -100))
+            entity_token_start = torch.arange(self._max_sequence_length).reshape(1, self._max_sequence_length, 1).repeat(batch_size, 1, self._max_sequence_length).to(self.device)
 
             entity_text_ids = torch.tensor(batched_examples.text_ids).view(batch_size, 1, 1).repeat(1, self._max_sequence_length, self._max_entity_length).to(self.device)
 
@@ -131,17 +134,19 @@ class InferenceBinder(SerializableModel):
             chosen_category_ids = predictions[entities_mask]
             chosen_span_starts = span_start[entities_mask]
             chosen_span_ends = span_end[entities_mask]
-            for text_id, category_id, start, end in zip(chosen_text_ids, chosen_category_ids, chosen_span_starts, chosen_span_ends):
-                predictions_collector[text_id][TypedSpan(start.item(), end.item(), self._category_id_mapping[category_id.item()])] += 1
+            chosen_token_starts = entity_token_start[entities_mask]
+            for text_id, category_id, start, end, token_start in zip(chosen_text_ids, chosen_category_ids, chosen_span_starts, chosen_span_ends, chosen_token_starts):
+                predictions_collector[text_id][(TypedSpan(start.item(), end.item(), self._category_id_mapping[category_id.item()]), token_start)] += 1
 
-            for text_id in batched_examples.text_ids:
-                total_predictions[text_id] += 1
-
-        # TODO: does not work
         all_entities = [set() for _ in texts]
         for text_id, preds in enumerate(predictions_collector):
-            for entity, count_preds in preds.items():
-                if count_preds > total_predictions[text_id] / 2:
+            for (entity, entity_token_start), count_preds in preds.items():
+                total_predictions = min(
+                    (entity_token_start / stride_length) + 1,
+                    self._max_sequence_length / stride_length,
+                    ((max_strided_length - entity_token_start) / stride_length) + 1
+                )
+                if count_preds > total_predictions / 2:
                     all_entities[text_id].add(entity)
 
         return all_entities
