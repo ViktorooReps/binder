@@ -9,8 +9,6 @@ from typing import Dict, List, Set, TypeVar, Optional, Iterable, Tuple
 
 import numpy as np
 import torch
-from onnxruntime.transformers import optimizer
-from onnxruntime.transformers.fusion_options import FusionOptions
 from torch import Tensor, LongTensor
 from torch.nn import Module
 from torch.nn.functional import pad
@@ -37,6 +35,8 @@ logger = logging.getLogger(__name__)
 
 try:
     from onnxruntime import InferenceSession, SessionOptions, GraphOptimizationLevel
+    from onnxruntime.transformers import optimizer
+    from onnxruntime.transformers.fusion_options import FusionOptions
 except:
     logger.warning('Could not import ONNX inference tools!')
 
