@@ -126,7 +126,7 @@ class SpanClassifier(SerializableModel):
 
     def _get_entity_representations(self) -> Tensor:
         if self._frozen_entity_representations is not None:
-            return self._frozen_entity_representations
+            return self._frozen_entity_representations.to(self.device)
         return self._descriptions_encoder(self._encoded_descriptions)  # TODO: split into batches
 
     def _get_length_representations(self, token_representations: Tensor) -> Tensor:
