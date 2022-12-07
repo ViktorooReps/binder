@@ -277,5 +277,6 @@ def evaluate(predictions: Iterable[Set[TypedSpan]], ground_truth: Iterable[Set[T
 
     f1_macro = category_f1.mean()
     print(f'macro F1: {f1_macro * 100:.2f}%')
+    print(f'micro F1: {f1_macro * 100:.2f}%')
 
     return {'macro': f1_macro, 'micro': micro_f1}

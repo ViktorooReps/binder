@@ -182,7 +182,7 @@ def strided_split(
                     logger.warning(f'Skipped entity {category} at ({start} {end}) -- weird span')
                     continue
 
-            token_length = token_end - token_start - 1
+            token_length = token_end - token_start
             if token_length >= max_entity_length:
                 logger.warning(f'Skipped entity {category} at ({start} {end}) -- too long')
                 continue
