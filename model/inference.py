@@ -125,7 +125,7 @@ class InferenceBinder(SerializableModel):
 
             entities_mask = ((predictions != no_entity_category_id) & padding_mask & (span_end != -100) & (span_start != -100))
 
-            entity_text_ids = torch.tensor(batched_examples.text_ids).view(batch_size, 1, 1).repeat(1, self._max_sequence_length, self._max_entity_length)
+            entity_text_ids = torch.tensor(batched_examples.text_ids).view(batch_size, 1, 1).repeat(1, self._max_sequence_length, self._max_entity_length).to(self.device)
 
             chosen_text_ids = entity_text_ids[entities_mask]
             chosen_category_ids = predictions[entities_mask]
