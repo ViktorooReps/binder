@@ -3,7 +3,7 @@ from dataclasses import dataclass, fields
 from typing import Tuple, Iterable, Optional, Union, Dict, List, Set, Callable, Any
 
 import torch
-from torch import LongTensor
+from torch import LongTensor, BoolTensor
 from torch.nn.utils.rnn import pad_sequence
 from transformers.tokenization_utils_base import EncodingFast
 
@@ -204,8 +204,8 @@ def strided_split(
             text_id,
             chunk_start,
             torch.tensor([cls_token_id] + encoding.ids[chunk_start:chunk_end], dtype=torch.long).long(),
-            torch.tensor([0] + offset[chunk_start:chunk_end, 0].tolist(), dtype=torch.long).long(),
-            torch.tensor([0] + offset[chunk_start:chunk_end, 1].tolist(), dtype=torch.long).long(),
+            torch.tensor([-100] + offset[chunk_start:chunk_end, 0].tolist(), dtype=torch.long).long(),
+            torch.tensor([-100] + offset[chunk_start:chunk_end, 1].tolist(), dtype=torch.long).long(),
             torch.tensor([[-100] * max_entity_length] + target_label_ids[chunk_start:chunk_end].tolist(), dtype=torch.long).long() if target_label_ids is not None else None
         )
         yield ex

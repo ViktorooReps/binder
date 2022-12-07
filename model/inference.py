@@ -77,7 +77,7 @@ class InferenceBinder(SerializableModel):
 
     @torch.no_grad()
     def forward(self, texts: List[str]) -> List[Set[TypedSpan]]:
-        stride = 1/4
+        stride = 1
         examples = list(self._classifier.prepare_inputs(
             texts, [None] * len(texts),
             category_mapping=self._category_mapping,
@@ -122,7 +122,7 @@ class InferenceBinder(SerializableModel):
             span_end = torch.concat(span_end, dim=-1)
             padding_mask = torch.concat(padding_masks, dim=-1)
 
-            entities_mask = ((predictions != no_entity_category_id) & padding_mask)
+            entities_mask = ((predictions != no_entity_category_id) & padding_mask & (span_end != -100) & (span_start != -100))
 
             entity_text_ids = torch.tensor(batched_examples.text_ids).view(batch_size, 1, 1).repeat(1, self._max_sequence_length, self._max_entity_length)
 
@@ -132,8 +132,11 @@ class InferenceBinder(SerializableModel):
             chosen_span_ends = span_end[entities_mask]
             for text_id, category_id, start, end in zip(chosen_text_ids, chosen_category_ids, chosen_span_starts, chosen_span_ends):
                 predictions_collector[text_id][TypedSpan(start.item(), end.item(), self._category_id_mapping[category_id.item()])] += 1
+
+            for text_id in batched_examples.text_ids:
                 total_predictions[text_id] += 1
 
+        # TODO: does not work
         all_entities = [set() for _ in texts]
         for text_id, preds in enumerate(predictions_collector):
             for entity, count_preds in preds.items():
