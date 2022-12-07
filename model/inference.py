@@ -87,13 +87,13 @@ class InferenceBinder(SerializableModel):
             stride=stride
         ))
 
-        max_strided_length = ((self._max_sequence_length / stride_length) + (self._max_sequence_length % stride_length)) * stride_length
+        max_strided_length = ((self._max_sequence_length // stride_length) + (self._max_sequence_length % stride_length)) * stride_length
 
         no_entity_category_id = self._category_mapping[self._no_entity_category]
 
         predictions_collector = [defaultdict(int) for _ in texts]
         for batch in tqdm(batch_examples(
-                examples,
+                examples[:10],
                 batch_size=1,
                 collate_fn=partial(self._classifier.collate_examples, return_batch_examples=True)
         ), total=len(examples)):
@@ -136,17 +136,17 @@ class InferenceBinder(SerializableModel):
             chosen_span_ends = span_end[entities_mask]
             chosen_token_starts = entity_token_start[entities_mask]
             for text_id, category_id, start, end, token_start in zip(chosen_text_ids, chosen_category_ids, chosen_span_starts, chosen_span_ends, chosen_token_starts):
-                predictions_collector[text_id][(TypedSpan(start.item(), end.item(), self._category_id_mapping[category_id.item()]), token_start)] += 1
+                predictions_collector[text_id][(TypedSpan(start.item(), end.item(), self._category_id_mapping[category_id.item()]), token_start.item())] += 1
 
         all_entities = [set() for _ in texts]
         for text_id, preds in enumerate(predictions_collector):
             for (entity, entity_token_start), count_preds in preds.items():
                 total_predictions = min(
-                    (entity_token_start / stride_length) + 1,
-                    self._max_sequence_length / stride_length,
-                    ((max_strided_length - entity_token_start) / stride_length) + 1
+                    (entity_token_start // stride_length) + 1,
+                    self._max_sequence_length // stride_length,
+                    ((max_strided_length - entity_token_start) // stride_length) + 1
                 )
-                if count_preds > total_predictions / 2:
+                if count_preds >= total_predictions // 2:
                     all_entities[text_id].add(entity)
 
         return all_entities
