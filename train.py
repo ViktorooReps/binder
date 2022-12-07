@@ -127,6 +127,7 @@ if __name__ == '__main__':
     )
     inference_model.save(Path(model_args.save_path))
 
+    inference_model.cuda()
     # TODO: unify interface for all datasets
 
     text_files, annotation_files = get_dataset_files(Path('data/nerel'), DatasetType.TEST)
