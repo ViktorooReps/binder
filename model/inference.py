@@ -104,13 +104,13 @@ class InferenceBinder(SerializableModel):
                 batched_examples.start_offset,
                 [0, self._max_sequence_length - length],
                 value=-100
-            ).view(batch_size, self._max_sequence_length, 1).repeat(1, 1, self._max_entity_length)
+            ).view(batch_size, self._max_sequence_length, 1).repeat(1, 1, self._max_entity_length).to(self.device)
 
             end_offset = pad(
                 batched_examples.end_offset,
                 [0, self._max_sequence_length - length],
                 value=-100
-            )
+            ).to(self.device)
 
             padding_masks = []
             span_end = []
