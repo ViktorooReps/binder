@@ -11,8 +11,9 @@ from transformers import Trainer, HfArgumentParser, TrainingArguments, EvalPredi
 from transformers.modeling_utils import unwrap_model
 
 from datamodel.configuration import DatasetArguments, get_datasets, DatasetName, get_descriptions
-from datamodel.utils import invert
-from model.inference import InferenceBinder
+from datamodel.reader.nerel import get_dataset_files, read_annotation, read_text
+from datamodel.utils import invert, DatasetType
+from model.inference import InferenceBinder, evaluate
 from model.span_classifier import ModelArguments, SpanClassifier
 
 logger = logging.getLogger(__name__)
@@ -117,12 +118,25 @@ if __name__ == '__main__':
 
     trained_model: SpanClassifier = unwrap_model(trainer.model_wrapped)
     trained_model.cpu()
-    InferenceBinder(
+    inference_model = InferenceBinder(
         trained_model,
         category_mapping=category_mapping,
         no_entity_category=unk_category,
         max_sequence_length=model_args.max_sequence_length,
         max_entity_length=model_args.max_entity_length
-    ).save(Path(model_args.save_path))
+    )
+    inference_model.save(Path(model_args.save_path))
+
+    # TODO: unify interface for all datasets
+
+    text_files, annotation_files = get_dataset_files(Path('data/nerel'), DatasetType.TEST)
+    test_categories = sorted(get_descriptions(DatasetName.NEREL).keys())
+
+    ground_truth = list(map(read_annotation, annotation_files))
+    texts = list(map(read_text, text_files))
+
+    model_predictions = inference_model(texts)
+
+    evaluate(model_predictions, ground_truth, test_categories)
 
     tb_writer.add_hparams(hparam_dict={**normalize(model_args.__dict__), **normalize(training_args.__dict__)}, metric_dict=metrics)

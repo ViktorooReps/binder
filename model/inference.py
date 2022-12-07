@@ -5,8 +5,9 @@ from copy import deepcopy
 from functools import partial
 from os import cpu_count, environ
 from pathlib import Path
-from typing import Dict, List, Set, TypeVar, Optional
+from typing import Dict, List, Set, TypeVar, Optional, Iterable, Tuple
 
+import numpy as np
 import torch
 from onnxruntime.transformers import optimizer
 from onnxruntime.transformers.fusion_options import FusionOptions
@@ -237,3 +238,44 @@ class ONNXOptimizedEncoder(Module):
                 }
             )[0])
         }
+
+
+def evaluate(predictions: Iterable[Set[TypedSpan]], ground_truth: Iterable[Set[TypedSpan]], categories: List[str]) -> Dict[str, float]:
+    n_categories = len(categories)
+    category_id_mapping = dict(enumerate(categories))
+    category_mapping = invert(category_id_mapping)
+
+    def group_by_category(entities: Set[TypedSpan]) -> Dict[str, Set[Tuple[int, int]]]:
+        groups = {cat: set() for cat in categories}
+        for entity in entities:
+            groups[entity.type].add((entity.start, entity.end))
+        return groups
+
+    true_positives = np.zeros(n_categories, dtype=int)
+    false_positives = np.zeros(n_categories, dtype=int)
+    false_negatives = np.zeros(n_categories, dtype=int)
+
+    for true_entities, predicted_entities in zip(ground_truth, predictions):
+        true_groups = group_by_category(true_entities)
+        predicted_groups = group_by_category(predicted_entities)
+
+        for category in categories:
+            category_id = category_mapping[category]
+            true_set = true_groups[category]
+            predicted_set = predicted_groups[category]
+
+            true_positives[category_id] += len(true_set.intersection(predicted_set))
+            false_positives[category_id] += len(predicted_set.difference(true_set))
+            false_negatives[category_id] += len(true_set.difference(predicted_set))
+
+    category_f1 = true_positives / (true_positives + (false_positives + false_negatives) / 2)
+    for category_id, f1 in enumerate(category_f1):
+        category = category_id_mapping[category_id]
+        print(f'{category}: {f1 * 100:.2f}%')
+
+    micro_f1 = true_positives.sum() / (true_positives.sum() + (false_positives.sum() + false_negatives.sum()) / 2)
+
+    f1_macro = category_f1.mean()
+    print(f'macro F1: {f1_macro * 100:.2f}%')
+
+    return {'macro': f1_macro, 'micro': micro_f1}
