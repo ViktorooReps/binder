@@ -87,8 +87,6 @@ class InferenceBinder(SerializableModel):
             stride=stride
         ))
 
-        max_strided_length = ((self._max_sequence_length // stride_length) + (self._max_sequence_length % stride_length > 0)) * stride_length
-
         no_entity_category_id = self._category_mapping[self._no_entity_category]
 
         predictions_collector = [defaultdict(int) for _ in texts]
@@ -140,11 +138,13 @@ class InferenceBinder(SerializableModel):
 
         all_entities = [set() for _ in texts]
         for text_id, preds in enumerate(predictions_collector):
+            text_length = ...
+            strided_text_length = ((text_length // stride_length) + (text_length % stride_length > 0)) * stride_length
             for (entity, entity_token_start), count_preds in preds.items():
                 total_predictions = min(
                     (entity_token_start // stride_length) + 1,
                     self._max_sequence_length // stride_length,
-                    ((max_strided_length - entity_token_start) // stride_length) + 1
+                    ((strided_text_length - entity_token_start) // stride_length) + 1
                 )
                 if count_preds >= total_predictions // 2:
                     all_entities[text_id].add(entity)
