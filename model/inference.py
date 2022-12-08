@@ -78,7 +78,7 @@ class InferenceBinder(SerializableModel):
 
     @torch.no_grad()
     def forward(self, texts: List[str]) -> List[Set[TypedSpan]]:
-        stride = 0.2
+        stride = 0.9
         stride_length = int(self._max_sequence_length * stride)
 
         text_lengths: List[Optional[int]] = [None] * len(texts)
@@ -94,7 +94,7 @@ class InferenceBinder(SerializableModel):
 
         predictions_collector = [defaultdict(int) for _ in texts]
         for batch in tqdm(batch_examples(
-                examples[:10],
+                examples,
                 batch_size=1,
                 collate_fn=partial(self._classifier.collate_examples, return_batch_examples=True)
         ), total=len(examples)):
@@ -147,7 +147,7 @@ class InferenceBinder(SerializableModel):
                 # [1, 2, 3, ..., MAX, MAX, ..., MAX, MAX - 1, ..., 3, 2, 1] bin sizes are stride_length except for the last bin
                 total_predictions = min(
                     (entity_token_start // stride_length) + 1,
-                    self._max_sequence_length // stride_length,
+                    (max(strided_text_length - self._max_sequence_length, 0) // stride_length) + 1,
                     ((strided_text_length - entity_token_start) // stride_length) + 1
                 )
                 if count_preds >= total_predictions // 2:
@@ -286,6 +286,6 @@ def evaluate(predictions: Iterable[Set[TypedSpan]], ground_truth: Iterable[Set[T
 
     f1_macro = category_f1.mean()
     print(f'macro F1: {f1_macro * 100:.2f}%')
-    print(f'micro F1: {f1_macro * 100:.2f}%')
+    print(f'micro F1: {micro_f1 * 100:.2f}%')
 
     return {'macro': f1_macro, 'micro': micro_f1}
