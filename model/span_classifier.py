@@ -173,6 +173,7 @@ class SpanClassifier(SerializableModel):
             stride: float = 1/8,
             category_mapping: Dict[str, int],
             no_entity_category: str,
+            text_lengths: Optional[List] = None
     ) -> Iterable[Example]:
 
         encodings: Optional[List[EncodingFast]] = self._tokenizer(
@@ -183,6 +184,10 @@ class SpanClassifier(SerializableModel):
         ).encodings
         if encodings is None:
             raise ValueError(f'Tokenizer {self._bert_tokenizer} is not fast! Use fast tokenizer!')
+
+        if text_lengths is not None:
+            for i in range(len(texts)):
+                text_lengths[i] = len(encodings[i].ids)
 
         for text_idx, (encoding, entities) in enumerate(zip(encodings, entities)):
             yield from strided_split(

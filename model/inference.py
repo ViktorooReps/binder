@@ -80,11 +80,14 @@ class InferenceBinder(SerializableModel):
     def forward(self, texts: List[str]) -> List[Set[TypedSpan]]:
         stride = 0.2
         stride_length = int(self._max_sequence_length * stride)
+
+        text_lengths: List[Optional[int]] = [None] * len(texts)
         examples = list(self._classifier.prepare_inputs(
             texts, [None] * len(texts),
             category_mapping=self._category_mapping,
             no_entity_category=self._no_entity_category,
-            stride=stride
+            stride=stride,
+            text_lengths=text_lengths
         ))
 
         no_entity_category_id = self._category_mapping[self._no_entity_category]
@@ -138,9 +141,10 @@ class InferenceBinder(SerializableModel):
 
         all_entities = [set() for _ in texts]
         for text_id, preds in enumerate(predictions_collector):
-            text_length = ...
+            text_length = text_lengths[text_id]
             strided_text_length = ((text_length // stride_length) + (text_length % stride_length > 0)) * stride_length
             for (entity, entity_token_start), count_preds in preds.items():
+                # [1, 2, 3, ..., MAX, MAX, ..., MAX, MAX - 1, ..., 3, 2, 1] bin sizes are stride_length except for the last bin
                 total_predictions = min(
                     (entity_token_start // stride_length) + 1,
                     self._max_sequence_length // stride_length,
